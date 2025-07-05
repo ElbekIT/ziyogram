@@ -1,4 +1,4 @@
-import { db, storage } from "./firebase-config.js"
+import { db, storage, serverTimestamp } from "./firebase-config.js"
 import {
   collection,
   addDoc,
@@ -7,7 +7,6 @@ import {
   orderBy,
   where,
   getDocs,
-  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"
 
@@ -121,29 +120,43 @@ class ZiyoGram {
     const phoneNumber = document.getElementById("phone-number").value.trim()
 
     if (!phoneNumber) {
-      alert("Please enter your phone number")
+      alert("Iltimos, telefon raqamingizni kiriting / Please enter your phone number")
       return
     }
 
     const fullPhoneNumber = countryCode + phoneNumber
 
-    // Check if user already exists
-    const userQuery = query(collection(db, "users"), where("phone", "==", fullPhoneNumber))
-    const userSnapshot = await getDocs(userQuery)
+    // Tugmani vaqtincha o'chirish
+    const nextBtn = document.getElementById("next-btn")
+    nextBtn.disabled = true
+    nextBtn.textContent = "Checking..."
 
-    if (!userSnapshot.empty) {
-      // User exists, log them in
-      const userData = userSnapshot.docs[0].data()
-      this.currentUser = {
-        id: userSnapshot.docs[0].id,
-        ...userData,
+    try {
+      // Check if user already exists
+      const userQuery = query(collection(db, "users"), where("phone", "==", fullPhoneNumber))
+      const userSnapshot = await getDocs(userQuery)
+
+      if (!userSnapshot.empty) {
+        // User exists, log them in
+        const userData = userSnapshot.docs[0].data()
+        this.currentUser = {
+          id: userSnapshot.docs[0].id,
+          ...userData,
+        }
+        this.saveUserToStorage()
+        this.showMainScreen()
+      } else {
+        // New user, go to profile setup
+        this.tempPhone = fullPhoneNumber
+        this.showProfileScreen()
       }
-      this.saveUserToStorage()
-      this.showMainScreen()
-    } else {
-      // New user, go to profile setup
-      this.tempPhone = fullPhoneNumber
-      this.showProfileScreen()
+    } catch (error) {
+      console.error("Error checking user:", error)
+      alert("Xatolik yuz berdi. Qaytadan urinib ko'ring / Error occurred. Please try again.")
+    } finally {
+      // Tugmani qayta yoqish
+      nextBtn.disabled = false
+      nextBtn.textContent = "Next"
     }
   }
 
@@ -169,9 +182,14 @@ class ZiyoGram {
     const imageFile = document.getElementById("profile-image").files[0]
 
     if (!firstName) {
-      alert("Please enter your first name")
+      alert("Iltimos, ismingizni kiriting / Please enter your first name")
       return
     }
+
+    // Tugmani vaqtincha o'chirish
+    const submitBtn = document.getElementById("start-messaging-btn")
+    submitBtn.disabled = true
+    submitBtn.textContent = "Creating account..."
 
     let profileImageUrl = ""
 
@@ -193,8 +211,8 @@ class ZiyoGram {
       lastName: lastName,
       fullName: `${firstName} ${lastName}`.trim(),
       profileImage: profileImageUrl,
-      createdAt: serverTimestamp(),
-      lastSeen: serverTimestamp(),
+      createdAt: new Date(),
+      lastSeen: new Date(),
       isOnline: true,
     }
 
@@ -208,7 +226,11 @@ class ZiyoGram {
       this.showMainScreen()
     } catch (error) {
       console.error("Error creating user:", error)
-      alert("Error creating account. Please try again.")
+      alert("Xatolik yuz berdi. Qaytadan urinib ko'ring / Error creating account. Please try again.")
+
+      // Tugmani qayta yoqish
+      submitBtn.disabled = false
+      submitBtn.textContent = "Start Messaging"
     }
   }
 
