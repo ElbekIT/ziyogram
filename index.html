@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZiyoGram</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Phone Registration Screen -->
+    <div id="phone-screen" class="screen active">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="logo">
+                    <div class="telegram-logo">
+                        <svg width="60" height="60" viewBox="0 0 240 240" fill="none">
+                            <circle cx="120" cy="120" r="120" fill="#0088cc"/>
+                            <path d="M81.229 128.772l14.237 39.406s1.78 3.687 3.686 3.687 30.255-29.492 30.255-29.492l31.525-60.89L81.737 118.6l-.508 10.172z" fill="#c8daea"/>
+                            <path d="M105.204 155.856l-2.49-38.177 65.346-57.963s2.42-1.94-.589-.589l-77.83 56.58z" fill="#a9c9dd"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1>ZiyoGram</h1>
+                <p>Please confirm your country code and enter your phone number.</p>
+            </div>
+            <div class="auth-form">
+                <div class="country-selector">
+                    <select id="country-code">
+                        <option value="+998">Uzbekistan (+998)</option>
+                        <option value="+1">United States (+1)</option>
+                        <option value="+7">Russia (+7)</option>
+                        <option value="+44">United Kingdom (+44)</option>
+                    </select>
+                </div>
+                <div class="phone-input">
+                    <input type="tel" id="phone-number" placeholder="Phone number" maxlength="15">
+                </div>
+                <button id="next-btn" class="primary-btn">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Setup Screen -->
+    <div id="profile-screen" class="screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>Your Info</h1>
+                <p>Please provide your name and add a profile picture.</p>
+            </div>
+            <div class="auth-form">
+                <div class="profile-upload">
+                    <div class="profile-image-container">
+                        <img id="profile-preview" src="/placeholder.svg" alt="Profile" style="display: none;">
+                        <div id="upload-placeholder" class="upload-placeholder">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.1 3.89 23 5 23H19C20.1 23 21 22.1 21 21V9M19 9H14V4H5V21H19V9Z" fill="#8e8e93"/>
+                            </svg>
+                        </div>
+                        <input type="file" id="profile-image" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                <div class="name-input">
+                    <input type="text" id="first-name" placeholder="First Name (required)" required>
+                    <input type="text" id="last-name" placeholder="Last Name (optional)">
+                </div>
+                <button id="start-messaging-btn" class="primary-btn">Start Messaging</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Screen -->
+    <div id="main-screen" class="screen">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-info">
+                    <img id="sidebar-avatar" src="/placeholder.svg" alt="User Avatar" class="user-avatar">
+                    <div class="user-details">
+                        <div id="sidebar-name" class="user-name"></div>
+                        <div id="sidebar-status" class="user-status">Set Emoji Status</div>
+                    </div>
+                    <button id="sidebar-close" class="sidebar-close">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.1 3.89 23 5 23H19C20.1 23 21 22.1 21 21V9M19 9H14V4H5V21H19V9Z" fill="currentColor"/>
+                    </svg>
+                    <span>My Profile</span>
+                </div>
+                <div class="menu-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M16 4C16.55 4 17 4.45 17 5V9.5L20.5 13L19.09 14.41L15 10.33V5C15 4.45 15.45 4 16 4M12 2C17.52 2 22 6.48 22 12C22 17.52 17.52 22 12 22C6.48 22 2 17.52 2 12C2 6.48 6.48 2 12 2Z" fill="currentColor"/>
+                    </svg>
+                    <span>New Group</span>
+                </div>
+                <div class="menu-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" fill="currentColor"/>
+                    </svg>
+                    <span>New Channel</span>
+                </div>
+                <div class="menu-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M16 4C16.55 4 17 4.45 17 5V9.5L20.5 13L19.09 14.41L15 10.33V5C15 4.45 15.45 4 16 4M12 2C17.52 2 22 6.48 22 12C22 17.52 17.52 22 12 22C6.48 22 2 17.52 2 12C2 6.48 6.48 2 12 2Z" fill="currentColor"/>
+                    </svg>
+                    <span>Contacts</span>
+                </div>
+                <div class="menu-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M6.62 10.79C8.06 13.62 10.38 15.94 13.21 17.38L15.41 15.18C15.69 14.9 16.08 14.82 16.43 14.93C17.55 15.3 18.75 15.5 20 15.5C20.55 15.5 21 15.95 21 16.5V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="currentColor"/>
+                    </svg>
+                    <span>Calls</span>
+                </div>
+                <div class="menu-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M17 3H7C5.9 3 5 3.9 5 5V19L12 16L19 19V5C19 3.9 18.1 3 17 3Z" fill="currentColor"/>
+                    </svg>
+                    <span>Saved Messages</span>
+                </div>
+                <div class="menu-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5A3.5 3.5 0 0 1 15.5 12A3.5 3.5 0 0 1 12 15.5M19.43 12.98C19.47 12.66 19.5 12.33 19.5 12C19.5 11.67 19.47 11.34 19.43 11.02L21.54 9.37C21.73 9.22 21.78 8.95 21.66 8.73L19.66 5.27C19.54 5.05 19.27 4.96 19.05 5.05L16.56 6.05C16.04 5.65 15.48 5.32 14.87 5.07L14.49 2.42C14.46 2.18 14.25 2 14 2H10C9.75 2 9.54 2.18 9.51 2.42L9.13 5.07C8.52 5.32 7.96 5.66 7.44 6.05L4.95 5.05C4.73 4.96 4.46 5.05 4.34 5.27L2.34 8.73C2.22 8.95 2.27 9.22 2.46 9.37L4.57 11.02C4.53 11.34 4.5 11.67 4.5 12C4.5 12.33 4.53 12.66 4.57 12.98L2.46 14.63C2.27 14.78 2.22 15.05 2.34 15.27L4.34 18.73C4.46 18.95 4.73 19.03 4.95 18.95L7.44 17.94C7.96 18.34 8.52 18.68 9.13 18.93L9.51 21.58C9.54 21.82 9.75 22 10 22H14C14.25 22 14.46 21.82 14.49 21.58L14.87 18.93C15.48 18.68 16.04 18.34 16.56 17.94L19.05 18.95C19.27 19.03 19.54 18.95 19.66 18.73L21.66 15.27C21.78 15.05 21.73 14.78 21.54 14.63L19.43 12.98Z" fill="currentColor"/>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+                <div class="menu-item night-mode">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M17.75 4.09L15.22 6.03L16.13 9.09L13.5 7.28L10.87 9.09L11.78 6.03L9.25 4.09L12.44 4L13.5 1L14.56 4L17.75 4.09M21.25 11L19.61 12.25L20.2 14.23L18.5 13.06L16.8 14.23L17.39 12.25L15.75 11L17.81 10.95L18.5 9L19.19 10.95L21.25 11M18.97 15.95C19.8 15.87 20.69 17.05 20.16 17.8C19.84 18.25 19.5 18.67 19.08 19.07C15.17 23 8.84 23 4.94 19.07C1.03 15.17 1.03 8.83 4.94 4.93C5.34 4.53 5.76 4.17 6.21 3.85C6.96 3.32 8.14 4.21 8.06 5.04C7.79 7.9 8.75 10.87 10.95 13.06C13.14 15.26 16.1 16.22 18.97 15.95Z" fill="currentColor"/>
+                    </svg>
+                    <span>Night Mode</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="night-mode-toggle">
+                        <label for="night-mode-toggle"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="version-info">ZiyoGram Desktop</div>
+                <div class="version-number">Version 1.0.0 – About</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="main-header">
+                <button id="menu-btn" class="menu-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <div class="search-container">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search">
+                </div>
+            </div>
+
+            <!-- Chat List -->
+            <div class="chat-list" id="chat-list">
+                <!-- Chat items will be populated here -->
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div class="empty-chat">
+                <div class="empty-chat-content">
+                    <h2>Select a chat to start messaging</h2>
+                </div>
+            </div>
+            
+            <!-- Active Chat (hidden by default) -->
+            <div id="active-chat" class="active-chat" style="display: none;">
+                <div class="chat-header">
+                    <div class="chat-info">
+                        <img id="chat-avatar" src="/placeholder.svg" alt="Chat Avatar" class="chat-avatar">
+                        <div class="chat-details">
+                            <div id="chat-name" class="chat-name"></div>
+                            <div id="chat-status" class="chat-status">last seen recently</div>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="action-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M6.62 10.79C8.06 13.62 10.38 15.94 13.21 17.38L15.41 15.18C15.69 14.9 16.08 14.82 16.43 14.93C17.55 15.3 18.75 15.5 20 15.5C20.55 15.5 21 15.95 21 16.5V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button class="action-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button class="action-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="messages-container" id="messages-container">
+                    <!-- Messages will be populated here -->
+                </div>
+                
+                <div class="message-input-container">
+                    <div class="message-input-wrapper">
+                        <button class="attach-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <input type="text" id="message-input" placeholder="Write a message...">
+                        <button id="send-btn" class="send-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
