@@ -1,8 +1,9 @@
 // Firebase Configuration
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"
-import { getFirestore, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"
+import { serverTimestamp as getFirebaseServerTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
 
 const firebaseConfig = {
   apiKey: "AIzaSyBXE3uEBswD__7L7jsWavsa8KNX7WouPGo",
@@ -19,9 +20,7 @@ const app = initializeApp(firebaseConfig)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
 export const auth = getAuth(app)
-
-// Export serverTimestamp ham
-export { serverTimestamp }
+export const serverTimestamp = getFirebaseServerTimestamp
 
 window.firebaseApp = app
 window.db = db

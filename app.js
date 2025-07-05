@@ -7,6 +7,8 @@ import {
   orderBy,
   where,
   getDocs,
+  updateDoc,
+  doc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"
 
@@ -16,6 +18,7 @@ class ZiyoGram {
     this.currentChat = null
     this.users = new Map()
     this.chats = new Map()
+    this.messageListeners = new Map()
     this.init()
   }
 
@@ -106,7 +109,11 @@ class ZiyoGram {
 
     // Search functionality
     document.getElementById("search-input").addEventListener("input", (e) => {
-      this.searchUsers(e.target.value)
+      this.handleSearch(e.target.value)
+    })
+
+    document.getElementById("clear-search").addEventListener("click", () => {
+      this.clearSearch()
     })
 
     // Night mode toggle
@@ -126,18 +133,15 @@ class ZiyoGram {
 
     const fullPhoneNumber = countryCode + phoneNumber
 
-    // Tugmani vaqtincha o'chirish
     const nextBtn = document.getElementById("next-btn")
     nextBtn.disabled = true
     nextBtn.textContent = "Checking..."
 
     try {
-      // Check if user already exists
       const userQuery = query(collection(db, "users"), where("phone", "==", fullPhoneNumber))
       const userSnapshot = await getDocs(userQuery)
 
       if (!userSnapshot.empty) {
-        // User exists, log them in
         const userData = userSnapshot.docs[0].data()
         this.currentUser = {
           id: userSnapshot.docs[0].id,
@@ -146,7 +150,6 @@ class ZiyoGram {
         this.saveUserToStorage()
         this.showMainScreen()
       } else {
-        // New user, go to profile setup
         this.tempPhone = fullPhoneNumber
         this.showProfileScreen()
       }
@@ -154,7 +157,6 @@ class ZiyoGram {
       console.error("Error checking user:", error)
       alert("Xatolik yuz berdi. Qaytadan urinib ko'ring / Error occurred. Please try again.")
     } finally {
-      // Tugmani qayta yoqish
       nextBtn.disabled = false
       nextBtn.textContent = "Next"
     }
@@ -186,14 +188,12 @@ class ZiyoGram {
       return
     }
 
-    // Tugmani vaqtincha o'chirish
     const submitBtn = document.getElementById("start-messaging-btn")
     submitBtn.disabled = true
     submitBtn.textContent = "Creating account..."
 
     let profileImageUrl = ""
 
-    // Upload profile image if provided
     if (imageFile) {
       try {
         const imageRef = ref(storage, `profile-images/${Date.now()}_${imageFile.name}`)
@@ -204,7 +204,6 @@ class ZiyoGram {
       }
     }
 
-    // Create user document
     const userData = {
       phone: this.tempPhone,
       firstName: firstName,
@@ -227,8 +226,6 @@ class ZiyoGram {
     } catch (error) {
       console.error("Error creating user:", error)
       alert("Xatolik yuz berdi. Qaytadan urinib ko'ring / Error creating account. Please try again.")
-
-      // Tugmani qayta yoqish
       submitBtn.disabled = false
       submitBtn.textContent = "Start Messaging"
     }
@@ -257,13 +254,131 @@ class ZiyoGram {
           const userData = { id: change.doc.id, ...change.doc.data() }
           this.users.set(change.doc.id, userData)
 
-          // Don't show current user in chat list
           if (userData.id !== this.currentUser.id) {
             this.addUserToChatList(userData)
           }
         }
       })
     })
+  }
+
+  async handleSearch(searchTerm) {
+    const searchResults = document.getElementById("search-results")
+    const searchList = document.getElementById("search-list")
+
+    if (!searchTerm.trim()) {
+      searchResults.style.display = "none"
+      document.getElementById("chat-list").style.display = "block"
+      return
+    }
+
+    searchResults.style.display = "block"
+    document.getElementById("chat-list").style.display = "none"
+
+    const phoneRegex = /^\+?[\d\s\-$$$$]+$/
+    if (phoneRegex.test(searchTerm.trim())) {
+      await this.searchByPhone(searchTerm.trim())
+    } else {
+      this.searchByName(searchTerm.trim())
+    }
+  }
+
+  async searchByPhone(phoneNumber) {
+    const searchList = document.getElementById("search-list")
+    searchList.innerHTML = '<div class="loading" style="margin: 20px auto;"></div>'
+
+    try {
+      let normalizedPhone = phoneNumber.replace(/[\s\-$$$$]/g, "")
+      if (!normalizedPhone.startsWith("+")) {
+        normalizedPhone = "+" + normalizedPhone
+      }
+
+      const userQuery = query(collection(db, "users"), where("phone", "==", normalizedPhone))
+      const userSnapshot = await getDocs(userQuery)
+
+      searchList.innerHTML = ""
+
+      if (!userSnapshot.empty) {
+        userSnapshot.forEach((doc) => {
+          const userData = { id: doc.id, ...doc.data() }
+          if (userData.id !== this.currentUser.id) {
+            this.addUserToSearchResults(userData)
+          }
+        })
+      } else {
+        searchList.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #8e8e93;">
+                        No user found with this phone number
+                    </div>
+                `
+      }
+    } catch (error) {
+      console.error("Error searching by phone:", error)
+      searchList.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #ff6b6b;">
+                    Error searching. Please try again.
+                </div>
+            `
+    }
+  }
+
+  searchByName(searchTerm) {
+    const searchList = document.getElementById("search-list")
+    searchList.innerHTML = ""
+
+    const matchingUsers = Array.from(this.users.values()).filter(
+      (user) => user.id !== this.currentUser.id && user.fullName.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+
+    if (matchingUsers.length > 0) {
+      matchingUsers.forEach((user) => {
+        this.addUserToSearchResults(user)
+      })
+    } else {
+      searchList.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #8e8e93;">
+                    No users found
+                </div>
+            `
+    }
+  }
+
+  addUserToSearchResults(user) {
+    const searchList = document.getElementById("search-list")
+    const userItem = document.createElement("div")
+    userItem.className = "chat-item"
+    userItem.setAttribute("data-user-id", user.id)
+
+    const avatarUrl =
+      user.profileImage ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=0088cc&color=fff`
+
+    userItem.innerHTML = `
+            <div class="chat-item-avatar">
+                <img src="${avatarUrl}" alt="${user.fullName}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                ${user.isOnline ? '<div class="online-indicator"></div>' : ""}
+            </div>
+            <div class="chat-item-content">
+                <div class="chat-item-header">
+                    <div class="chat-item-name">${user.fullName}</div>
+                    <div class="chat-item-time">${user.isOnline ? "online" : "offline"}</div>
+                </div>
+                <div class="chat-item-message">${user.phone}</div>
+            </div>
+        `
+
+    userItem.addEventListener("click", () => {
+      this.clearSearch()
+      this.openChat(user)
+    })
+
+    searchList.appendChild(userItem)
+  }
+
+  clearSearch() {
+    document.getElementById("search-input").value = ""
+    document.getElementById("search-results").style.display = "none"
+    document.getElementById("chat-list").style.display = "block"
   }
 
   addUserToChatList(user) {
@@ -288,6 +403,7 @@ class ZiyoGram {
     chatItem.innerHTML = `
             <div class="chat-item-avatar">
                 <img src="${avatarUrl}" alt="${user.fullName}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                ${user.isOnline ? '<div class="online-indicator"></div>' : ""}
             </div>
             <div class="chat-item-content">
                 <div class="chat-item-header">
@@ -302,17 +418,16 @@ class ZiyoGram {
   openChat(user) {
     this.currentChat = user
 
-    // Update active chat UI
     document.querySelectorAll(".chat-item").forEach((item) => item.classList.remove("active"))
-    document.querySelector(`[data-user-id="${user.id}"]`).classList.add("active")
+    const activeItem = document.querySelector(`[data-user-id="${user.id}"]`)
+    if (activeItem) activeItem.classList.add("active")
 
-    // Show chat area
     document.querySelector(".empty-chat").style.display = "none"
     document.getElementById("active-chat").style.display = "flex"
 
-    // Update chat header
     const chatAvatar = document.getElementById("chat-avatar")
     const chatName = document.getElementById("chat-name")
+    const chatStatus = document.getElementById("chat-status")
 
     const avatarUrl =
       user.profileImage ||
@@ -320,11 +435,10 @@ class ZiyoGram {
 
     chatAvatar.src = avatarUrl
     chatName.textContent = user.fullName
+    chatStatus.textContent = user.isOnline ? "online" : "last seen recently"
 
-    // Load messages
     this.loadMessages(user.id)
 
-    // On mobile, show chat area
     if (window.innerWidth <= 768) {
       document.querySelector(".chat-area").classList.add("mobile-active")
     }
@@ -334,27 +448,50 @@ class ZiyoGram {
     const messagesContainer = document.getElementById("messages-container")
     messagesContainer.innerHTML = ""
 
-    // Create chat ID (consistent ordering)
     const chatId = [this.currentUser.id, userId].sort().join("_")
+
+    if (this.messageListeners.has(chatId)) {
+      this.messageListeners.get(chatId)()
+    }
 
     const messagesQuery = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"))
 
-    onSnapshot(messagesQuery, (snapshot) => {
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      let lastDate = null
+
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
-          const messageData = change.doc.data()
-          this.addMessageToUI(messageData)
+          const messageData = { id: change.doc.id, ...change.doc.data() }
+          this.addMessageToUI(messageData, lastDate)
+
+          if (messageData.timestamp) {
+            lastDate = new Date(messageData.timestamp.seconds * 1000).toDateString()
+          }
         }
       })
 
-      // Scroll to bottom
       messagesContainer.scrollTop = messagesContainer.scrollHeight
+
+      this.markMessagesAsRead(chatId, userId)
     })
+
+    this.messageListeners.set(chatId, unsubscribe)
   }
 
-  addMessageToUI(messageData) {
+  addMessageToUI(messageData, lastDate) {
     const messagesContainer = document.getElementById("messages-container")
     const messageDiv = document.createElement("div")
+
+    if (messageData.timestamp) {
+      const messageDate = new Date(messageData.timestamp.seconds * 1000).toDateString()
+
+      if (messageDate !== lastDate) {
+        const dateSeparator = document.createElement("div")
+        dateSeparator.className = "date-separator"
+        dateSeparator.innerHTML = `<span>${this.formatDate(messageDate)}</span>`
+        messagesContainer.appendChild(dateSeparator)
+      }
+    }
 
     const isOwn = messageData.senderId === this.currentUser.id
     messageDiv.className = `message ${isOwn ? "sent" : "received"}`
@@ -363,12 +500,86 @@ class ZiyoGram {
       ? new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 
-    messageDiv.innerHTML = `
-            <div class="message-content">${messageData.text}</div>
-            <div class="message-time">${timestamp}</div>
+    let statusHTML = ""
+    if (isOwn) {
+      if (messageData.read) {
+        statusHTML = `
+          <div class="message-status">
+            <svg class="checkmark read" viewBox="0 0 16 16">
+              <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+            </svg>
+            <svg class="checkmark double read" viewBox="0 0 16 16">
+              <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+            </svg>
+          </div>
         `
+      } else if (messageData.delivered) {
+        statusHTML = `
+          <div class="message-status">
+            <svg class="checkmark" viewBox="0 0 16 16">
+              <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+            </svg>
+            <svg class="checkmark double" viewBox="0 0 16 16">
+              <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+            </svg>
+          </div>
+        `
+      } else {
+        statusHTML = `
+          <div class="message-status">
+            <svg class="checkmark" viewBox="0 0 16 16">
+              <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+            </svg>
+          </div>
+        `
+      }
+    }
+
+    messageDiv.innerHTML = `
+      <div class="message-content">${messageData.text}</div>
+      <div class="message-footer">
+        <span class="message-time">${timestamp}</span>
+        ${statusHTML}
+      </div>
+    `
 
     messagesContainer.appendChild(messageDiv)
+  }
+
+  formatDate(dateString) {
+    const date = new Date(dateString)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today"
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday"
+    } else {
+      return date.toLocaleDateString("en-US", { month: "long", day: "numeric" })
+    }
+  }
+
+  async markMessagesAsRead(chatId, senderId) {
+    try {
+      const messagesQuery = query(
+        collection(db, "chats", chatId, "messages"),
+        where("senderId", "==", senderId),
+        where("read", "==", false),
+      )
+
+      const snapshot = await getDocs(messagesQuery)
+
+      snapshot.forEach(async (messageDoc) => {
+        await updateDoc(doc(db, "chats", chatId, "messages", messageDoc.id), {
+          read: true,
+          readAt: serverTimestamp(),
+        })
+      })
+    } catch (error) {
+      console.error("Error marking messages as read:", error)
+    }
   }
 
   async sendMessage() {
@@ -386,31 +597,39 @@ class ZiyoGram {
       receiverId: this.currentChat.id,
       timestamp: serverTimestamp(),
       chatId: chatId,
+      delivered: true,
+      read: false,
     }
 
     try {
       await addDoc(collection(db, "chats", chatId, "messages"), messageData)
       messageInput.value = ""
+
+      this.updateChatListLastMessage(this.currentChat.id, messageText)
     } catch (error) {
       console.error("Error sending message:", error)
+    }
+  }
+
+  updateChatListLastMessage(userId, lastMessage) {
+    const chatItem = document.querySelector(`[data-user-id="${userId}"]`)
+    if (chatItem) {
+      const messageElement = chatItem.querySelector(".chat-item-message")
+      const timeElement = chatItem.querySelector(".chat-item-time")
+
+      if (messageElement) {
+        messageElement.textContent = lastMessage
+      }
+
+      if (timeElement) {
+        timeElement.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      }
     }
   }
 
   loadChats() {
     // This would load existing chats/conversations
     // For now, we're showing all users as potential chats
-  }
-
-  searchUsers(searchTerm) {
-    const chatItems = document.querySelectorAll(".chat-item")
-    chatItems.forEach((item) => {
-      const name = item.querySelector(".chat-item-name").textContent.toLowerCase()
-      if (name.includes(searchTerm.toLowerCase())) {
-        item.style.display = "flex"
-      } else {
-        item.style.display = "none"
-      }
-    })
   }
 
   toggleSidebar() {
@@ -424,13 +643,10 @@ class ZiyoGram {
   }
 
   toggleNightMode(enabled) {
-    // Night mode is already the default theme
-    // This could be extended to implement a light theme
     console.log("Night mode:", enabled)
   }
 }
 
-// Initialize the app when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
   new ZiyoGram()
 })
